@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ConfigProvider, theme, Button, /*Upload, message,*/ Form, Input, Row, Col, Select, ColorPicker } from "antd";
-// import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { UploadOutlined } from '@ant-design/icons';
 import '../styles/ui.css';
 
 const { TextArea } = Input;
@@ -9,7 +9,8 @@ const { Option } = Select;
 
 function App() {
   const { darkAlgorithm } = theme;
-  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [lookAndFeel, setLookAndFeel] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#5B8FF9');
   const [secondaryColors, setSecondaryColors] = useState(['#99EF2B', '#EFDB2B', '#ED962C', '#EE2F32']);
@@ -32,7 +33,6 @@ function App() {
         } 
         
       } else {
-        // Alert the user if the selected file is not an image
         alert('Please select a valid image file.');
       }
     }
@@ -70,60 +70,32 @@ function App() {
       .catch(error => {
         console.error('Error:', error);
       });
-      // const response = await fetch('http://127.0.0.1:5000/generate', {
-      //   method: 'POST',
-      //   // headers: {
-      //   //   "Content-Type": "application/json"
-      //   // },
-      //   body: JSON.stringify({image: selectedImage})
-      //   // body: formData,
-      // });
-      // console.log("Response: ", response)
-
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   message.success('Image uploaded successfully');
-      //   console.log(data);
-      //   // Do something with the response if needed
-      // } else {
-      //   message.error('Failed to upload image');
-      // }
     } catch (error) {
       console.log(error);
-      // message.error('An error occurred while uploading the image');
     }
   }
 
-
-  // const beforeUpload = (file: any) => {
-  //   const isImage = file.type.startsWith('image/');
-  //   if (!isImage) {
-  //     message.error('You can only upload image files!');
-  //   } else {
-  //     setUploadedFile(file); // Store the file
-  //   }
-  //   return isImage || Upload.LIST_IGNORE;
-  // };
-
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
   return (
       <ConfigProvider
         theme={{
           algorithm: darkAlgorithm,
         }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-          {/* <Upload
-            accept="image/*"
-            beforeUpload={beforeUpload}
-            listType="picture"
-            maxCount={1}
-            showUploadList={true}
-          >
-            <Button icon={<UploadOutlined rev={undefined} />}>Click to upload</Button>
-          </Upload> */}
+          <div style={{marginBottom:40}}>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImageChange}
+              ref={fileInputRef}
+            />
+            <Button type='dashed' size='large' icon={<UploadOutlined rev={undefined}/>} onClick={triggerFileInput}>
+              Upload Image
+            </Button>
+          </div>
+          
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
             <TextArea 
@@ -169,10 +141,11 @@ function App() {
                 <Option value="nature">Anime</Option>
                 <Option value="business">Photographic</Option>
                 <Option value="business">Fantasy Art</Option>
+                <Option value="business">Digital Art</Option>
               </Select>
             </Form.Item>
           </Form>
-          <Button type='primary' size='large' block onClick={handleGenerate}>Generate</Button>
+          <Button type='primary' size='large' block onClick={handleGenerate} loading={loading}>Generate</Button>
       </ConfigProvider>      
   );
 }
