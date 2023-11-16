@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
-import { ConfigProvider, theme, Button, /*Upload, message,*/ Form, Input, Row, Col, Select, ColorPicker } from "antd";
+import React, { useState } from 'react';
+import { Buffer } from 'buffer';
+import { ConfigProvider, theme, Button, Form, Input, Row, Col, Select, ColorPicker } from "antd";
+
 import axios from 'axios';
 import { UploadOutlined } from '@ant-design/icons';
 import '../styles/ui.css';
@@ -9,17 +11,15 @@ const { Option } = Select;
 
 function App() {
   const { darkAlgorithm } = theme;
-  const fileInputRef = useRef(null);
-  const [loading, setLoading] = useState<boolean>(false);
   const [lookAndFeel, setLookAndFeel] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#5B8FF9');
   const [secondaryColors, setSecondaryColors] = useState(['#99EF2B', '#EFDB2B', '#ED962C', '#EE2F32']);
-  const [style, setStyle] = useState<string>();
+  const [style, setStyle] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState(null);
+  // const [generatedImage, setGeneratedImage] = useState(null)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    console.log(file)
     // Check if a file is selected
     if (file) {
       // Check if the selected file is an image
@@ -60,12 +60,44 @@ function App() {
   const handleGenerate = () => {
     postImage();
   }
+  function base64ToUint8Array(base64String: string): Uint8Array | null {
+    try {
+      console.log("base64ToUint8Array: ", base64String)
+      // Remove the data URL prefix if present
+      const base64WithoutPrefix = base64String.replace(/^data:\w+\/\w+;base64,/, '');
+  
+      // Decode the base64 string using Buffer
+      // const buffer = Buffer.from(base64WithoutPrefix, 'base64');
+      const buffer = Buffer.from(base64WithoutPrefix, 'base64');
+  
+      // Create a Uint8Array from the Buffer
+      const uint8Array = new Uint8Array(buffer);
+  
+      return uint8Array;
+    } catch (error) {
+      console.error('Error converting base64 to Uint8Array:', error.message);
+      return null;
+    }
+  }
 
   const postImage = async () => {
     try {
-      axios.post('http://127.0.0.1:5000/generate', {image: selectedImage})
+      axios.post('http://127.0.0.1:5000/generate', 
+        {
+          image: selectedImage,
+          lookAndFeel,
+          primaryColor,
+          secondaryColors,
+          style
+        }
+      )
       .then(response => {
-        console.log('Response:', response.data);
+        const b64JSON = response.data.result
+        const bs4 = JSON.parse(b64JSON)["b64"]
+        const uint8Array = base64ToUint8Array(bs4)
+        
+
+        parent.postMessage({ pluginMessage: { type: 'generated-image', uint8Array } }, '*');
       })
       .catch(error => {
         console.error('Error:', error);
@@ -74,6 +106,7 @@ function App() {
       console.log(error);
     }
   }
+
 
   const triggerFileInput = () => {
     fileInputRef.current.click();
@@ -95,7 +128,6 @@ function App() {
               Upload Image
             </Button>
           </div>
-          
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
             <TextArea 
