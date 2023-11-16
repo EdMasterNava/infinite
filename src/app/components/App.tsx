@@ -10,6 +10,7 @@ const { Option } = Select;
 function App() {
   const { darkAlgorithm } = theme;
   const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [lookAndFeel, setLookAndFeel] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#5B8FF9');
   const [secondaryColors, setSecondaryColors] = useState(['#99EF2B', '#EFDB2B', '#ED962C', '#EE2F32']);
@@ -144,7 +145,7 @@ function App() {
               </Select>
             </Form.Item>
           </Form>
-          <Button type='primary' size='large' block onClick={handleGenerate}>Generate</Button>
+          <Button type='primary' size='large' block onClick={handleGenerate} loading={loading}>Generate</Button>
       </ConfigProvider>      
   );
 }
