@@ -1,17 +1,41 @@
 import React, { useState } from 'react';
-import { ConfigProvider, theme, Button, Upload, message, Form, Input, Row, Col, Select, ColorPicker } from "antd";
-import { UploadOutlined } from '@ant-design/icons';
+import { ConfigProvider, theme, Button, /*Upload, message,*/ Form, Input, Row, Col, Select, ColorPicker } from "antd";
+// import { UploadOutlined } from '@ant-design/icons';
+import axios from 'axios';
 import '../styles/ui.css';
 
 const { Option } = Select;
 
 function App() {
   const { darkAlgorithm } = theme;
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [lookAndFeel, setLookAndFeel] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#5B8FF9');
   const [secondaryColors, setSecondaryColors] = useState(['#99EF2B', '#EFDB2B', '#ED962C', '#EE2F32']);
   const [style, setStyle] = useState<string>();
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    console.log(file)
+    // Check if a file is selected
+    if (file) {
+      // Check if the selected file is an image
+      if (file.type.startsWith('image/')) {
+        // Set the selected image to the state
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          setSelectedImage(base64data);
+        } 
+        
+      } else {
+        // Alert the user if the selected file is not an image
+        alert('Please select a valid image file.');
+      }
+    }
+  };
 
   const handlePrimaryColorChange = (color: any) => {
     setPrimaryColor(color.hex);
@@ -37,57 +61,68 @@ function App() {
   }
 
   const postImage = async () => {
-    if (!uploadedFile) {
-      message.error('No image selected');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('image', uploadedFile);
-
     try {
-      const response = await fetch('YOUR_API_ENDPOINT', {
-        method: 'POST',
-        body: formData,
+      axios.post('http://127.0.0.1:5000/generate', {image: selectedImage})
+      .then(response => {
+        console.log('Response:', response.data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
       });
+      // const response = await fetch('http://127.0.0.1:5000/generate', {
+      //   method: 'POST',
+      //   // headers: {
+      //   //   "Content-Type": "application/json"
+      //   // },
+      //   body: JSON.stringify({image: selectedImage})
+      //   // body: formData,
+      // });
+      // console.log("Response: ", response)
 
-      if (response.ok) {
-        const data = await response.json();
-        message.success('Image uploaded successfully');
-        // Do something with the response if needed
-      } else {
-        message.error('Failed to upload image');
-      }
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   message.success('Image uploaded successfully');
+      //   console.log(data);
+      //   // Do something with the response if needed
+      // } else {
+      //   message.error('Failed to upload image');
+      // }
     } catch (error) {
-      message.error('An error occurred while uploading the image');
+      console.log(error);
+      // message.error('An error occurred while uploading the image');
     }
   }
 
 
-  const beforeUpload = (file: any) => {
-    const isImage = file.type.startsWith('image/');
-    if (!isImage) {
-      message.error('You can only upload image files!');
-    } else {
-      setUploadedFile(file); // Store the file
-    }
-    return isImage || Upload.LIST_IGNORE;
-  };
+  // const beforeUpload = (file: any) => {
+  //   const isImage = file.type.startsWith('image/');
+  //   if (!isImage) {
+  //     message.error('You can only upload image files!');
+  //   } else {
+  //     setUploadedFile(file); // Store the file
+  //   }
+  //   return isImage || Upload.LIST_IGNORE;
+  // };
 
   return (
       <ConfigProvider
         theme={{
           algorithm: darkAlgorithm,
         }}>
-          <Upload
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+          {/* <Upload
             accept="image/*"
             beforeUpload={beforeUpload}
             listType="picture"
             maxCount={1}
-            showUploadList={false}
+            showUploadList={true}
           >
             <Button icon={<UploadOutlined rev={undefined} />}>Click to upload</Button>
-          </Upload>
+          </Upload> */}
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
               <Input placeholder="I want it to feel modern, slick..." value={lookAndFeel}
