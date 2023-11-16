@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ConfigProvider, theme, Button, /*Upload, message,*/ Form, Input, Row, Col, Select, ColorPicker } from "antd";
-// import { UploadOutlined } from '@ant-design/icons';
+import { Buffer } from 'buffer';
+import { ConfigProvider, theme, Button, Form, Input, Row, Col, Select, ColorPicker } from "antd";
 import axios from 'axios';
 import '../styles/ui.css';
 
@@ -8,16 +8,15 @@ const { Option } = Select;
 
 function App() {
   const { darkAlgorithm } = theme;
-  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [lookAndFeel, setLookAndFeel] = useState<string>('');
   const [primaryColor, setPrimaryColor] = useState('#5B8FF9');
   const [secondaryColors, setSecondaryColors] = useState(['#99EF2B', '#EFDB2B', '#ED962C', '#EE2F32']);
-  const [style, setStyle] = useState<string>();
+  const [style, setStyle] = useState<string>('');
   const [selectedImage, setSelectedImage] = useState(null);
+  // const [generatedImage, setGeneratedImage] = useState(null)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    console.log(file)
     // Check if a file is selected
     if (file) {
       // Check if the selected file is an image
@@ -59,50 +58,53 @@ function App() {
   const handleGenerate = () => {
     postImage();
   }
+  function base64ToUint8Array(base64String: string): Uint8Array | null {
+    try {
+      console.log("base64ToUint8Array: ", base64String)
+      // Remove the data URL prefix if present
+      const base64WithoutPrefix = base64String.replace(/^data:\w+\/\w+;base64,/, '');
+  
+      // Decode the base64 string using Buffer
+      // const buffer = Buffer.from(base64WithoutPrefix, 'base64');
+      const buffer = Buffer.from(base64WithoutPrefix, 'base64');
+  
+      // Create a Uint8Array from the Buffer
+      const uint8Array = new Uint8Array(buffer);
+  
+      return uint8Array;
+    } catch (error) {
+      console.error('Error converting base64 to Uint8Array:', error.message);
+      return null;
+    }
+  }
 
   const postImage = async () => {
     try {
-      axios.post('http://127.0.0.1:5000/generate', {image: selectedImage})
+      axios.post('http://127.0.0.1:5000/generate', 
+        {
+          image: selectedImage,
+          lookAndFeel,
+          primaryColor,
+          secondaryColors,
+          style
+        }
+      )
       .then(response => {
-        console.log('Response:', response.data);
+        const b64JSON = response.data.result
+        const bs4 = JSON.parse(b64JSON)["b64"]
+        const uint8Array = base64ToUint8Array(bs4)
+        
+
+        parent.postMessage({ pluginMessage: { type: 'generated-image', uint8Array } }, '*');
       })
       .catch(error => {
         console.error('Error:', error);
       });
-      // const response = await fetch('http://127.0.0.1:5000/generate', {
-      //   method: 'POST',
-      //   // headers: {
-      //   //   "Content-Type": "application/json"
-      //   // },
-      //   body: JSON.stringify({image: selectedImage})
-      //   // body: formData,
-      // });
-      // console.log("Response: ", response)
-
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   message.success('Image uploaded successfully');
-      //   console.log(data);
-      //   // Do something with the response if needed
-      // } else {
-      //   message.error('Failed to upload image');
-      // }
     } catch (error) {
       console.log(error);
       // message.error('An error occurred while uploading the image');
     }
   }
-
-
-  // const beforeUpload = (file: any) => {
-  //   const isImage = file.type.startsWith('image/');
-  //   if (!isImage) {
-  //     message.error('You can only upload image files!');
-  //   } else {
-  //     setUploadedFile(file); // Store the file
-  //   }
-  //   return isImage || Upload.LIST_IGNORE;
-  // };
 
   return (
       <ConfigProvider
@@ -114,15 +116,6 @@ function App() {
             accept="image/*"
             onChange={handleImageChange}
           />
-          {/* <Upload
-            accept="image/*"
-            beforeUpload={beforeUpload}
-            listType="picture"
-            maxCount={1}
-            showUploadList={true}
-          >
-            <Button icon={<UploadOutlined rev={undefined} />}>Click to upload</Button>
-          </Upload> */}
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
               <Input placeholder="I want it to feel modern, slick..." value={lookAndFeel}
