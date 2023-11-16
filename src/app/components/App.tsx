@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Buffer } from 'buffer';
 import { ConfigProvider, theme, Button, Form, Input, Row, Col, Select, ColorPicker } from "antd";
+
 import axios from 'axios';
+import { UploadOutlined } from '@ant-design/icons';
 import '../styles/ui.css';
 
+const { TextArea } = Input;
 const { Option } = Select;
 
 function App() {
@@ -30,7 +33,6 @@ function App() {
         } 
         
       } else {
-        // Alert the user if the selected file is not an image
         alert('Please select a valid image file.');
       }
     }
@@ -47,7 +49,7 @@ function App() {
     setSecondaryColors(newColors);
   };
 
-  const handleLookAndFeelChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLookAndFeelChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLookAndFeel(event.target.value);
   };
 
@@ -102,24 +104,38 @@ function App() {
       });
     } catch (error) {
       console.log(error);
-      // message.error('An error occurred while uploading the image');
     }
   }
 
+
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
   return (
       <ConfigProvider
         theme={{
           algorithm: darkAlgorithm,
         }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
+          <div style={{marginBottom:40}}>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImageChange}
+              ref={fileInputRef}
+            />
+            <Button type='dashed' size='large' icon={<UploadOutlined rev={undefined}/>} onClick={triggerFileInput}>
+              Upload Image
+            </Button>
+          </div>
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
-              <Input placeholder="I want it to feel modern, slick..." value={lookAndFeel}
-                onChange={handleLookAndFeelChange}/>
+            <TextArea 
+            placeholder="UI that feels fun and exciting..." 
+            value={lookAndFeel}
+            onChange={handleLookAndFeelChange}
+            autoSize={{ minRows: 3, maxRows: 3 }}  // Set min and max rows to 3
+          />
             </Form.Item>
           </Form>
           <Form>
@@ -129,7 +145,7 @@ function App() {
               </Col>
               <Col>
                 <Form.Item>
-                  <ColorPicker trigger="hover" defaultValue={primaryColor} onChange={(color) => handlePrimaryColorChange(color)}/>
+                  <ColorPicker trigger="hover" placement='bottom' defaultValue={primaryColor} onChange={(color) => handlePrimaryColorChange(color)}/>
                 </Form.Item>
               </Col>
             </Row>
@@ -143,7 +159,7 @@ function App() {
                 <Form.Item>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   {secondaryColors.map((color, index) => (
-                    <ColorPicker trigger="hover" style={{ marginRight: '1px' }} defaultValue={color} onChange={(color) => handleSecondaryColorChange(color, index)}/>
+                    <ColorPicker trigger="hover" placement='bottom' style={{ marginRight: '1px' }} defaultValue={color} onChange={(color) => handleSecondaryColorChange(color, index)}/>
                     ))}
                 </div>
                 </Form.Item>
@@ -157,10 +173,11 @@ function App() {
                 <Option value="nature">Anime</Option>
                 <Option value="business">Photographic</Option>
                 <Option value="business">Fantasy Art</Option>
+                <Option value="business">Digital Art</Option>
               </Select>
             </Form.Item>
           </Form>
-          <Button type='primary' size='large' block onClick={handleGenerate}>Generate</Button>
+          <Button type='primary' size='large' block onClick={handleGenerate} loading={loading}>Generate</Button>
       </ConfigProvider>      
   );
 }
