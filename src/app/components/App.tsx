@@ -3,6 +3,7 @@ import { ConfigProvider, theme, Button, Upload, message, Form, Input, Row, Col, 
 import { UploadOutlined } from '@ant-design/icons';
 import '../styles/ui.css';
 
+const { TextArea } = Input;
 const { Option } = Select;
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
     setSecondaryColors(newColors);
   };
 
-  const handleLookAndFeelChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLookAndFeelChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLookAndFeel(event.target.value);
   };
 
@@ -90,8 +91,12 @@ function App() {
           </Upload>
           <Form layout="vertical">
             <Form.Item label="Look & Feel">
-              <Input placeholder="I want it to feel modern, slick..." value={lookAndFeel}
-                onChange={handleLookAndFeelChange}/>
+            <TextArea 
+            placeholder="UI that feels fun and exciting..." 
+            value={lookAndFeel}
+            onChange={handleLookAndFeelChange}
+            autoSize={{ minRows: 3, maxRows: 3 }}  // Set min and max rows to 3
+          />
             </Form.Item>
           </Form>
           <Form>
@@ -101,7 +106,7 @@ function App() {
               </Col>
               <Col>
                 <Form.Item>
-                  <ColorPicker trigger="hover" defaultValue={primaryColor} onChange={(color) => handlePrimaryColorChange(color)}/>
+                  <ColorPicker trigger="hover" placement='bottom' defaultValue={primaryColor} onChange={(color) => handlePrimaryColorChange(color)}/>
                 </Form.Item>
               </Col>
             </Row>
@@ -115,7 +120,7 @@ function App() {
                 <Form.Item>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                   {secondaryColors.map((color, index) => (
-                    <ColorPicker trigger="hover" style={{ marginRight: '1px' }} defaultValue={color} onChange={(color) => handleSecondaryColorChange(color, index)}/>
+                    <ColorPicker trigger="hover" placement='bottom' style={{ marginRight: '1px' }} defaultValue={color} onChange={(color) => handleSecondaryColorChange(color, index)}/>
                     ))}
                 </div>
                 </Form.Item>
